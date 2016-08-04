@@ -1,0 +1,551 @@
+#include <graphics.h>
+#include<conio.h>
+#include<iostream>
+#pragma comment(lib,"Winmm.lib") //开启音频头文件
+#include <mmsystem.h> 
+#include<windows.h>
+using namespace std;
+void xiazi(int x,int y,int *k);
+int  panduan(int x,int y);
+int chizi(struct qizi d[],int i,int j);
+int chengsan(struct qizi d[],int i,int x,int y);
+void help();
+int srtart();
+void qipan();
+void move(struct qizi d[]);
+struct qizi{
+	int x;
+	int y;
+}a[25],c[10],b[10];
+int main()
+{
+	int n=0,x,y,w,k;
+	MOUSEMSG m[1000];
+	while(true)
+	{
+pd:
+	w=srtart();
+	switch (w)
+	{
+	case 1:
+		{
+kaisi:
+		k=1;
+		qipan();
+		while(true)
+		{ 
+			
+			m[n]= GetMouseMsg();
+			if(m[n].uMsg==WM_LBUTTONDOWN )
+			{   
+				printf("%d%d",m[n].x/100,m[n].y/100);
+				x=m[n].x/100;
+				y=m[n].y/100;
+				if(panduan(x,y)==11)
+				{			
+					xiazi(x,y,&k);
+					n++;
+				}
+				else if(panduan(x,y)==12)
+					goto pd;		
+				else if(panduan(x,y)==13)
+				{					
+					break;
+				}
+				else if(panduan(x,y)==14)
+				{
+					k=2;
+					goto kaisi;	
+				}
+			}
+			
+		}
+	case 2:
+		help();
+		break;
+	case 0:
+		return 0;
+		}
+	}
+	}
+	getch();
+	closegraph();
+	return 0;
+}
+
+void xiazi(int x,int y,int *k)
+{	
+	IMAGE e[2];
+	int q,m=0;
+    static int i,j,n;
+	if((*k)==1)
+	{
+		i=1;j=1,n=0;(*k)=-1;
+	}
+	if((*k)==2)
+	{
+		i=1;j=1,n=1;
+	}
+	if(n>1)
+	{
+		for(q=1;q<i;q++)
+			if(b[q].x==x && b[q].y==y)
+				m=1;
+			for(q=1;q<j;q++)
+				if(c[q].x==x && c[q].y==y)
+					m=1;
+	}
+	if(n%2==0 && i<=9 && m==0 )
+	{
+		loadimage(&e[1],_T("棋子图片\\黑棋子.jpg"),70,70,true);
+		putimage(100*x+20,100*y+20,&e[1]); puts("下黑子");
+		mciSendString("close mymusic", NULL, 0, NULL);
+  	    mciSendString("open \"My Music\\3.mp3\" alias mymusic", NULL, 0, NULL);   //打开音乐文件相对路径
+        mciSendString("play mymusic", NULL, 0, NULL);             //播放音乐文件
+		b[i].x=x;
+		b[i].y=y;
+		i++; 
+		printf("下的棋子位置为%d%5d\n",x,y);
+		n++;
+	}
+	else if(n%2==1 && j<=9 && m==0 )
+	{
+		loadimage(&e[1],_T("棋子图片\\白棋子.jpg"),70,70,true);
+		putimage(100*x+20,100*y+20,&e[1]); puts("下白子");
+		mciSendString("close mymusic", NULL, 0, NULL);
+		mciSendString("open \"My Music\\3.mp3\" alias mymusic", NULL, 0, NULL);     //打开音乐文件相对路径
+        mciSendString("play mymusic", NULL, 0, NULL);                               //播放音乐文件
+		c[j].x=x;
+		c[j].y=y;
+		j++;
+		printf("下的棋子位置为%d%5d\n",x,y);
+		n++;
+		Sleep(500);
+	}
+	if(n>=4 && j<=9)
+	{
+			if(chengsan(b,i,x,y)==1 && i>j)
+		{
+			printf("黑子成三!\a");			
+			chizi(c,i,j);	
+		}
+		else if(chengsan(c,j,x,y)==1 && j>=i)
+		{
+			printf("白子成三!\a");
+			chizi(b,i,j);		
+		}
+	}
+	m=0;
+	
+	if(j==10  && i==10 && m==0 && n%2==0)
+	{
+		move(b);
+		n++;
+	}
+	if(j==10  && i==10 && m==0 && n%2==1)
+	{
+		move(c);
+		n++;
+	}
+}
+int chizi(struct qizi d[],int i,int j)
+{
+	MOUSEMSG m;
+	IMAGE e[2];
+	int count=0;
+chongxuan:
+	int q,t,k,x=0,y=0,n=0,w=0;
+	while(true)
+	{ 
+		m= GetMouseMsg();
+		if(m.uMsg==WM_LBUTTONDOWN )
+		{
+			x=m.x/100;
+			y=m.y/100;
+			break;			
+		}
+	}
+	printf("x=%d,y=%d",x,y);
+	if(chengsan(d,i,x,y)==1)
+		w=1;
+    for(q=1;q<i;q++)
+		if(d[q].x==x && d[q].y==y && w!=1 )
+		{
+			d[q].x=1000;
+			d[q].y=1000;
+			count++;
+			n=1;
+		}
+		printf("w=%d",w);
+		if(n==1&& count==1)
+		{
+			
+			qipan();
+			for(t=1;t<i;t++)
+			{
+				loadimage(&e[1],_T("棋子图片\\黑棋子.jpg"),70,70,true);          //黑子 
+				putimage(b[t].x*100+25,b[t].y*100+25,&e[1]);                     //图片坐标
+				printf("%d%d",b[t].x,b[t].y);
+			}
+			for(k=1;k<j;k++)
+			{
+				loadimage(&e[1],_T("棋子图片\\白棋子.jpg"),70,70,true);          //白子 
+				putimage(c[k].x*100+25,c[k].y*100+25,&e[1]);                     //图片坐标
+				printf("%d%d",c[k].x,c[k].y);
+			}
+		}
+		else 
+			goto  chongxuan;
+
+		return 0;
+}
+void move(struct qizi d[])
+{
+	MOUSEMSG m;
+	IMAGE e[2];
+	int x,y,t,flog=0;
+	while(true)
+	{ 
+		m= GetMouseMsg();
+		if(m.uMsg==WM_LBUTTONDOWN )
+		{
+			x=m.x/100;
+			y=m.y/100;
+			break;			
+		}
+	}
+	for(t=1;t<=9;t++)
+		if(d[t].x==x && d[t].y==y )
+		{
+			while(true)
+			{
+			m= GetMouseMsg();
+			if(m.uMsg==WM_LBUTTONDOWN )
+			{
+				d[t].x=m.x/100;
+				d[t].y=m.y/100;
+				x=m.x/100;
+				y=m.y/100;
+				flog=1;
+				break;			
+			}
+			}
+		}
+		qipan();
+		for(t=1;t<=9;t++)
+		{
+			loadimage(&e[1],_T("棋子图片\\黑棋子.jpg"),70,70,true);          //黑子 
+			putimage(b[t].x*100+25,b[t].y*100+25,&e[1]);                     //图片坐标
+			loadimage(&e[1],_T("棋子图片\\白棋子.jpg"),70,70,true);          //白子 
+			putimage(c[t].x*100+25,c[t].y*100+25,&e[1]);                     //图片坐标
+		}
+		if(flog==1)
+		{
+			if(chengsan(b,9,x,y)==1)
+		{
+			printf("黑子成三!\a");			
+			chizi(c,9,9);	
+		}
+		else if(chengsan(c,9,x,y)==1)
+		{
+			printf("白子成三!\a");
+			chizi(b,9,9);		
+		}
+		}
+}
+void qipan()
+{
+	initgraph(700, 700);//,SHOWCONSOLE,可以显示测试框
+	setbkcolor(RGB(254, 210, 173));cleardevice();
+	setlinecolor(RGB(87, 5,17));
+	setlinestyle(PS_SOLID | PS_JOIN_BEVEL, 5);
+	rectangle(50,50,650,650);
+	rectangle(150,150,550,550);
+	rectangle(250,250,450,450);
+	line(350,50,350,250);
+	line(350,450,350,650);
+	line(50,350,250,350);
+	line(450,350,650,350);
+	settextstyle(25, 0, _T("华文行楷"));
+	setcolor(RGB(214, 10,0));
+	outtextxy(125,13,"退出");
+	//outtextxy(235,13,"悔棋");
+	outtextxy(495,13,"重新开始");	
+	setbkcolor(GREEN);
+	clearcircle(115,25,10);
+    //clearcircle(215,25,10);
+	clearcircle(475,25,10);
+	setcolor(RGB(125, 53,189));
+	rectangle(90,10,190,40);
+    //rectangle(200,10,300,40);
+	rectangle(450,10,600,40);
+}
+int  panduan(int x,int y)                //可以下棋子的坐标函数
+{
+	int i;
+	a[1].x=0,  a[1].y=0;           //第一排三个下子位置
+	a[2].x=3,  a[2].y=0;
+	a[3].x=6,  a[3].y=0;
+	a[4].x=1,  a[4].y=1;           //第二排三个下子位置
+	a[5].x=3,  a[5].y=1;
+	a[6].x=5,  a[6].y=1;
+	a[7].x=2,  a[7].y=2;           //第三排三个下子位置
+	a[8].x=3,  a[8].y=2;
+	a[9].x=4,  a[9].y=2;
+	a[10].x=0,a[10].y=3;           //第四排三个下子位置
+	a[11].x=1,a[11].y=3;
+	a[12].x=2,a[12].y=3;
+	a[13].x=4,a[13].y=3;           //第四排三个下子位置
+	a[14].x=5,a[14].y=3;
+	a[15].x=6,a[15].y=3;
+	a[16].x=2,a[16].y=4;           //第五排三个下子位置
+	a[17].x=3,a[17].y=4;
+	a[18].x=4,a[18].y=4;
+	a[19].x=1,a[19].y=5;           //第六排三个下子位置
+	a[20].x=3,a[20].y=5;
+	a[21].x=5,a[21].y=5;
+	a[22].x=0,a[22].y=6;           //第七排三个下子位置
+	a[23].x=3,a[23].y=6;
+	a[24].x=6,a[24].y=6;
+	for(i=1;i<25;i++)
+	{
+		if(a[i].x==x && a[i].y==y)		
+			return 11;
+		else if(a[i].x==1&& y==0)
+			return 12;
+		else if(x==2&& y==0)
+			return 13;
+		else if((x==4 && y==0 )||(x==5 && y==0))
+			return 14;
+	}
+	return 0;
+}
+void help()
+{
+	MOUSEMSG m;
+	initgraph(700, 700);
+	setbkcolor(RGB(201, 218, 238));cleardevice();
+	setlinecolor(RGB(50, 102,222));
+	setlinestyle(PS_SOLID | PS_JOIN_BEVEL, 5);
+	rectangle(50,100,650,650);
+	settextstyle(50, 0, _T("华文行楷"));
+	setcolor(RGB(214, 10,0));
+	outtextxy(300,20,"帮助");
+	settextstyle(30, 0, _T("华文行楷"));
+	outtextxy(60,150,"1.游戏规则:");
+	outtextxy(60,420,"2.操作方法:");
+	settextstyle(20, 0, _T("楷体"));
+	setcolor(BLACK);
+	outtextxy(60,180,"  (1)开始游戏时，先选择游戏模式。");
+	outtextxy(60,200,"  (2)双方各执九颗棋子，双方轮流下棋子到棋盘中，每次下一颗");
+	outtextxy(60,220,"  (3)下子过程中若有一方的棋子有三颗在一条直线上，则可以吃");
+	outtextxy(60,240,"	   掉对方一颗非三颗子在一条直线上的任意一颗棋子，然后双");
+	outtextxy(60,260,"     方继续下子，在棋子下完之前被吃了棋子的地方不能下棋子");
+	outtextxy(60,280,"  (4)双方棋子下完后，开始走棋子，棋子每次只能沿着线条走一");
+	outtextxy(60,300,"     格，只能在有线条的地方走。");
+	outtextxy(60,320,"  (5)棋子走的过程当中当任意一方有三颗棋子在一条直线上，即");
+	outtextxy(60,340,"	   可吃掉对方一颗非三颗子在一条直线上的任意一颗棋子，直");
+	outtextxy(60,360,"	   至有一方棋子数量少于3三颗，或者只剩在一条直线上三颗");
+	outtextxy(60,380,"	   棋子，则棋子较多一方胜利。若双方均只有成三的棋子，");
+	outtextxy(60,400,"	   而一方执棋吃子，则双方平局。");
+	outtextxy(60,450,"	 (1)本游戏为鼠标操作，开始时点击鼠标即可下棋子。");
+	outtextxy(60,470,"	 (2)走棋子时先选取要走的棋子，再点击要走的位置即可。");
+	settextstyle(40, 0, _T("华文行楷"));
+	setcolor(RGB(22, 69,173));
+	outtextxy(250,550,"	 游戏愉快!");
+	settextstyle(20, 0, _T("华文行楷"));
+	outtextxy(545,600,"	 退出帮助");
+	setcolor(GREEN);
+	rectangle(540,590,635,625);
+	while(true)
+	{ 
+		m= GetMouseMsg();
+		if(m.uMsg==WM_LBUTTONDOWN)
+			if(m.x>=540 && m.x<=635 && m.y>=590 && m.y<=625) 
+				break;				
+	}
+}
+int srtart()
+{
+	MOUSEMSG m;
+	IMAGE e;
+	initgraph(700, 700);
+	loadimage(&e,_T("棋子图片\\3.jpg"),700,700,true);
+	putimage(0,0,&e);
+	setbkmode(TRANSPARENT);		// 设置文字背景为透明色
+	setlinecolor(RGB(50, 102,222));
+	setlinestyle(PS_SOLID | PS_JOIN_BEVEL, 5);
+	rectangle(220,180,460,260);
+	rectangle(220,280,460,360);
+	rectangle(220,380,460,460);
+	settextstyle(80, 0, _T("华文行楷"));
+	setcolor(RGB(214, 10,0));
+	outtextxy(150,50,"成三小游戏");
+	settextstyle(50, 0, _T("华文行楷"));
+	setcolor(RGB(69, 221,232));
+	outtextxy(240,200,"开始游戏");
+	outtextxy(240,300,"游戏帮助");
+	outtextxy(240,400,"退出游戏");
+	settextstyle(30, 0, _T("华文行楷"));
+	setcolor(RGB(22, 69,173));
+	outtextxy(130,650,"	 制作人:夏文齐  冉瑞龙 于晓燕");
+	while(true)
+	{ 
+		m= GetMouseMsg();
+		if(m.uMsg==WM_LBUTTONDOWN)
+		{
+			if(m.x>=220 &&m.x<=460 && m.y>=180 && m.y<=260)  
+				return 1;
+			if(m.x>=220 &&m.x<=460 && m.y>=280 && m.y<=360)
+				return 2;
+			if(m.x>=220 &&m.x<=460 && m.y>=380 && m.y<=460)
+				return 0;
+		}
+	}
+}
+int chengsan(struct qizi d[],int i,int x,int y)                    //成三判断函数
+{
+	int m,m1=0,m2=0,t=0,k=0;
+	{
+		for(m=i-1;m>=0;m--)
+			if(x==d[m].x && y-d[m].y==1)                         //短竖向下
+			{
+				t=m;
+				m1++;
+				for(m=i-2;m>=0;m--)
+					if(d[t].x==d[m].x && d[t].y-d[m].y==1)
+						m1++;
+			}
+			for(m=i-1;m>=0;m--)
+				if(x==d[m].x && d[m].y-y==1)                        //短竖向上
+				{
+					k=m;
+					m2++;
+					for(m=i-1;m>=0;m--)
+						if(d[k].x==d[m].x && d[m].y-d[k].y==1)
+							m2++;
+				}	
+				if(m1+m2==2)
+					return 1;
+	}
+	m1=0,m2=0,t=0,k=0;
+	{
+		for(m=i-1;m>=0;m--)
+			if(y==d[m].y && x-d[m].x==1)                          //短横向右
+			{
+				t=m;
+				m1++;
+				for(m=i-2;m>=0;m--)
+					if(d[t].y==d[m].y && d[t].x-d[m].x==1)
+						m1++;
+			}
+			for(m=i-1;m>=0;m--)
+				if(y==d[m].y && d[m].x-x==1)                         //短横向左
+				{
+					k=m;
+					m2++;
+					for(m=i-2;m>=0;m--)
+						if(d[k].y==d[m].y && d[m].x-d[k].x==1)
+							m2++;
+				}	
+				if(m1+m2==2)
+					return 1;
+	}
+	m1=0,m2=0,t=0,k=0;
+	{
+		for(m=i-1;m>=0;m--)
+			if(x==d[m].x && y-d[m].y==2)                              //中竖向下
+			{
+				t=m;
+				m1++;
+				for(m=i-2;m>=0;m--)
+					if(d[t].x==d[m].x && d[t].y-d[m].y==2)
+						if((d[m].x!=3 && d[t].x!=3) ||(d[m].x!=3 && d[t].x==3)||(d[m].x==3 && d[t].x!=3))
+							m1++;
+			}
+			for(m=i-1;m>=0;m--)
+				if(x==d[m].x && d[m].y-y==2)                            //中竖向上
+				{
+					k=m;
+					m2++;
+					for(m=i-1;m>=0;m--)
+						if(d[k].x==d[m].x && d[m].y-d[k].y==2)
+							if((d[m].x!=3 && d[k].x!=3) ||(d[m].x!=3 && d[k].x==3)||(d[m].x==3 && d[k].x!=3))
+								m2++;
+				}
+				if(m1+m2==2)
+					return 1;
+	}
+	m1=0,m2=0,t=0,k=0;
+	{
+		for(m=i-1;m>=0;m--)
+			if(y==d[m].y && x-d[m].x==2 )                                //中横向右
+			{
+				t=m;
+				m1++;
+				for(m=i-2;m>=0;m--)
+					if(d[t].y==d[m].y && d[t].x-d[m].x==2)
+						if((d[m].y!=3 && d[t].y!=3) ||(d[m].y!=3 && d[t].y==3)||(d[m].y==3 && d[t].y!=3))
+							m1++;
+			}
+			for(m=i-1;m>=0;m--)
+				if(y==d[m].y && d[m].x-x==2)                          //中横向左
+				{
+					k=m;
+					m2++;
+					for(m=i-2;m>=0;m--)
+						if(d[k].y==d[m].y && d[m].x-d[k].x==2)
+							if((d[m].y!=3 && d[k].y!=3) ||(d[m].y!=3 && d[k].y==3)||(d[m].y==3 && d[k].y!=3))
+								m2++;
+				}
+				if(m1+m2==2)
+					return 1;
+	}
+	m1=0,m2=0,t=0,k=0;
+	{
+		for(m=i-2;m>0;m--)
+			if(x==d[m].x && y-d[m].y==3)                        //长竖向下
+			{
+				t=m;
+				m1++;
+				for(m=i-2;m>0;m--)
+					if(d[t].x==d[m].x && d[t].y-d[m].y==3)
+						m1++;
+			}
+			for(m=i-2;m>0;m--)
+				if(x==d[m].x && d[m].y-y==3)                       //长竖向上
+				{
+					k=m;
+					m2++;
+					for(m=i-2;m>0;m--)
+						if(d[k].x==d[m].x && d[m].y-d[k].y==3)
+							m2++;
+				}	
+				if(m1+m2==2)
+					return 1;
+	}
+	m1=0,m2=0,t=0,k=0;
+	{
+		for(m=i-1;m>0;m--)
+			if(y==d[m].y && x-d[m].x==3)                           //长横向右
+			{
+				t=m;
+				m1++;
+				for(m=i-2;m>0;m--)
+					if(d[t].y==d[m].y && d[t].x-d[m].x==3)
+						m1++;
+			}
+			for(m=i-1;m>0;m--)
+				if(y==d[m].y && d[m].x-x==3)                       //长横向左
+				{
+					k=m;
+					m2++;
+					for(m=i-2;m>0;m--)
+						if(d[k].y==d[m].y && d[m].x-d[k].x==3)
+							m2++;
+				}	
+				if(m1+m2==2)
+					return 1;
+	}
+	return 0;		
+}
